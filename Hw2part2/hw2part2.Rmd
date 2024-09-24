@@ -1,0 +1,186 @@
+---
+title: "HW2 part2"
+author: "Hao Zhu"
+date: "`r Sys.Date()`" # automate the date
+output:
+  html_document:
+    toc: true 
+    theme: sandstone
+    number_sections: true
+    toc_float: true
+    toc_depth: 2 
+    code_folding: hide
+bibliography: references.bib
+---
+
+```{r setup, include=FALSE,warning=FALSE, cache=TRUE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidycensus)
+library(sf)
+library(ggplot2)
+library(dplyr)
+```
+
+# Data Preparation
+
+Data from [@AmericanForests2024]
+```{r, warning=FALSE, cache=TRUE, message=FALSE}
+MA <- st_read("data/ma_shp/ma_tes.shp")
+```
+# Narrative Structure
+
+## Big Idea
+Suffolk County's stark Tree Equity gap reveals a troubling reality: low-income and minority neighborhoods are left to suffer in the heat, burdened by soaring energy costs and a lack of vital green spaces.
+
+## Narrative
+
+Certainly! Here’s a revised **Narrative** section, written more in the style of a news article to capture attention and engage the reader with a sense of urgency:
+
+---
+
+## Narrative
+
+**Suffolk County’s Urban Heat Crisis: Why Some Neighborhoods Are Left to Suffer**
+
+In the heart of Suffolk County, a harsh reality is unfolding—low-income and minority neighborhoods are baking in the sun, devoid of the tree coverage that cooler, wealthier areas take for granted. As temperatures soar each summer, these communities are left to face the brunt of extreme heat with little relief. While trees can reduce surrounding temperatures by as much as **45 degrees Fahrenheit**, the neighborhoods that need this protection the most are the ones with the least access to it.
+
+Data from Suffolk County reveals a stark disparity in **Tree Equity Scores**—a measure of how fairly tree coverage is distributed across neighborhoods. In areas where **people of color** make up the majority of the population, the scores are consistently lower. These communities not only suffer from intense urban heat but also from the financial burden that comes with it. Without tree cover to naturally cool their homes, residents rely heavily on air conditioning, driving up energy costs and placing even more strain on already tight budgets.
+
+Consider this: In a neighborhood where the **Tree Equity Score** is low, residents are forced to spend more on cooling their homes—sometimes by more than **50%**—while still enduring hotter streets and homes. Just a few miles away, in wealthier, predominantly white neighborhoods, tree-lined streets offer shade, cooler temperatures, and significantly lower energy bills. This isn’t just an issue of comfort—it’s a matter of environmental injustice.
+
+The data paints a troubling picture. Suffolk County’s most vulnerable communities—those already battling poverty and systemic neglect—are left to suffer through the heat while their wealthier counterparts enjoy the benefits of urban greenery. It’s not just about the trees—it’s about survival, health, and quality of life.
+
+**Why This Matters**: The lack of tree coverage exacerbates the **urban heat island effect**, making cities hotter, particularly in areas with fewer green spaces. This leaves marginalized communities facing not only health risks like heat stroke and respiratory issues but also financial stress due to higher energy bills.
+
+This is more than just an environmental issue—this is a call for **environmental justice**. Policymakers, urban planners, and environmental advocates need to take immediate action. Without targeted efforts to improve Tree Equity, the gap between Suffolk County’s most vulnerable residents and their wealthier neighbors will continue to widen, with devastating consequences for public health and economic stability.
+
+
+### Main Insights
+ 
+  + Data reveals that neighborhoods with higher percentages of people of color and higher poverty rates have significantly lower Tree Equity Scores.
+
+  + Areas with greater tree canopy coverage can experience temperature reductions of up to 45 degrees Fahrenheit, offering critical relief during heat waves.
+
+
+### Visuals & Graphics
+
+Visual 1: Tree Equity Score Map by Place in Suffolk County
+```{r,warning=FALSE, cache=TRUE, message=FALSE}
+data <- read.csv("data/ma_csv (1)/ma_tes.csv")
+
+# Filter data for Suffolk County
+suffolk_data <- data %>% filter(county == "Suffolk County")
+
+# Bar plot of Tree Equity Score by place in Suffolk County
+ggplot(suffolk_data, aes(x = reorder(place, -tes), y = tes)) +
+  geom_bar(stat = "identity", fill = "forestgreen") +
+  coord_flip() +  # Flip for better readability
+  labs(title = "Tree Equity Score by Place in Suffolk County", 
+       x = "Place", 
+       y = "Tree Equity Score") +
+  theme_minimal()
+
+```
+
+Visual 2: Population of Color vs. Tree Equity Score
+```{r, warning=FALSE, cache=TRUE, message=FALSE}
+ggplot(suffolk_data, aes(x = pctpoc, y = tes)) +
+  geom_point(alpha = 0.7, color = "purple") +
+  geom_smooth(method = "lm", color = "blue") +
+  labs(title = "Population of Color vs. Tree Equity Score", x = "Percent People of Color", y = "Tree Equity Score") +
+  theme_minimal()
+
+```
+Visual 3: Poverty Rate vs. Tree Equity Score
+```{r, warning=FALSE, cache=TRUE, message=FALSE}
+# Scatter plot of Poverty Rate vs. Tree Equity Score
+ggplot(suffolk_data, aes(x = pctpov, y = tes)) +
+  geom_point(alpha = 0.7, color = "red") +
+  geom_smooth(method = "lm", color = "darkred") +
+  labs(title = "Poverty Rate vs. Tree Equity Score", x = "Poverty Rate", y = "Tree Equity Score") +
+  theme_minimal()
+
+```
+
+Other Visuals:
+
+```{r, warning=FALSE, cache=TRUE, message=FALSE}
+suffolk_shape <- MA %>% filter(county == "Suffolk County")
+ggplot() +
+  geom_sf(data = suffolk_shape, aes(fill = tes), color = "white") +
+   scale_fill_gradient(low = "white", high = "darkolivegreen") +# Color scale for the fill
+  labs(title = "Tree Equity Score by Place in Suffolk County", 
+       fill = "Tree Equity Score") +
+  theme_void() +  
+  theme(
+    plot.title = element_text(size = 18, face = "bold", hjust = 0.5),  # Center and enlarge the title
+    legend.position = "right", 
+    legend.title = element_text(size = 12),  # Adjust legend title size
+    legend.text = element_text(size = 10)    # Adjust legend label size
+  )
+```
+```{r, warning=FALSE, cache=TRUE, message=FALSE}
+suffolk_shape <- suffolk_shape %>%
+  mutate(pop_density = acs_pop / land_area) 
+
+```
+
+```{r, warning=FALSE, cache=TRUE, message=FALSE}
+ggplot() +
+  geom_sf(data = suffolk_shape, aes(fill = pop_density), color = "white") +
+  scale_fill_viridis_c(option = "A", name = "Population Density", direction = -1) +  # Use a color scale for the density
+  labs(title = "Population Density by Place in Suffolk County", 
+       fill = "People per km²") +
+  theme_void() +
+  theme(
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.5),  # Customize title
+    legend.position = "right",  # Position the legend
+    legend.title = element_text(size = 12),  # Customize legend title size
+    legend.text = element_text(size = 10)    # Customize legend text size
+  )
+```
+**Future visuals:**
+
+  + Heat Exposure Map
+  + Heat vulnerability Map
+  
+### Context & Background
+Tree Equity is a measure that reflects how equitably tree canopy is distributed across a community. Trees provide numerous benefits, from cooling urban areas and reducing energy consumption to improving mental health and air quality. In many urban areas, including Suffolk County, wealthier, predominantly white neighborhoods tend to have more tree coverage, while low-income and minority communities often lack adequate tree canopy.
+
+This lack of trees contributes to higher temperatures in these neighborhoods, known as the urban heat island effect, and increases energy costs, as residents must rely on air conditioning to stay cool. Research has shown that trees can cool the air beneath them by as much as 45 degrees Fahrenheit, and they can reduce the cooling load in homes by more than 50%[@Nowak_2017]. Addressing Tree Equity is a crucial step toward improving environmental justice.
+
+### Transition
+The analysis of Suffolk County shows that Tree Equity is not distributed evenly. The communities that could benefit the most from tree canopy—those with high percentages of people of color and high poverty rates—are often the ones with the least access to it. These disparities are not just environmental but economic and social as well.
+
+### Key Takeaways
+  + Disparities in Tree Equity: Suffolk County neighborhoods with higher populations of people of color and higher poverty rates have significantly lower Tree Equity Scores.
+  + Tree canopy matters: Trees can reduce temperatures by up to 45 degrees Fahrenheit and decrease cooling costs by more than 50%, highlighting the importance of equitable urban forestry.
+  + Policy implications: Urban planning initiatives should prioritize tree planting in under-served communities to enhance both environmental and economic outcomes.
+
+### Emotional Hooks or Story Elements
+
+Imagine living in a neighborhood where the summer heat is unbearable, the air is thick with pollutants, and the streets are devoid of trees that could provide shade and cool the area by up to **45 degrees Fahrenheit**. Without tree canopy, homes are forced to rely heavily on air conditioning, which can drive up energy bills—especially in neighborhoods already struggling economically.
+
+Now imagine that just a few blocks away, wealthier neighborhoods enjoy the benefits of trees, reducing their cooling needs by more than **50%**[@Nowak_2017], which helps cut energy costs and keeps their homes and streets much cooler. This disparity isn’t just about comfort; it’s about survival during extreme heat events and maintaining a decent quality of life.
+
+Tree Equity isn’t just about trees—it’s about people. Every resident of Suffolk County deserves access to the environmental and health benefits that trees provide.
+
+
+## Reflection
+
+  + I wanted to create a compelling story around Tree Equity in Suffolk County, not just through data, but by framing it in a way that connects with readers emotionally. The goal was to show how the lack of trees in certain neighborhoods isn’t just an environmental issue but a social one, with real consequences for the people who live there.
+
+  + The shift to a more engaging, news-style narrative worked better than expected. It gave the story more depth and urgency, which helped make the issue of Tree Equity feel more real and relevant.
+  + The change in the RMarkdown theme was also a success. It made the final output look cleaner and more professional, and the floating table of contents made navigation easier.
+
+  + Right now, the visuals don’t pop. I’d like to spend more time refining the graphics—better color schemes, clearer labels, and maybe even more advanced geospatial maps that highlight the data’s key points more effectively.
+  
+  + Also, I think adding actual heat data would strengthen the argument about the effects of low Tree Equity. Without it, the connection between the lack of trees and increased heat in certain areas feels a little too abstract.
+  
+  + I realized that static visuals can be limiting, especially for a story like this where the data has spatial and human elements that are better conveyed through interactive or dynamic maps.
+
+
+
+
+
+## References

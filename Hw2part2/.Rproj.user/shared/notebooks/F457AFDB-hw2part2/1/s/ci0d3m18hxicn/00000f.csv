@@ -1,0 +1,8 @@
+"0","# Scatter plot of Poverty Rate vs. Tree Equity Score"
+"0","ggplot(suffolk_data, aes(x = pctpov, y = tes)) +"
+"0","  geom_point(alpha = 0.7, color = ""red"") +"
+"0","  geom_smooth(method = ""lm"", color = ""darkred"") +"
+"0","  labs(title = ""Poverty Rate vs. Tree Equity Score"", x = ""Poverty Rate"", y = ""Tree Equity Score"") +"
+"0","  theme_minimal()"
+"1","[38;5;252m`geom_smooth()` using formula = 'y ~ x'[39m
+"
